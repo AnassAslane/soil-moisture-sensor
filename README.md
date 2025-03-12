@@ -10,18 +10,15 @@ This Arduino program, designed for the ESP8266 WiFi module, reads soil moisture 
 .Red LED (D3): Soil is too dry, irrigation needed.
 5.Sends data to ThingSpeak, a cloud-based IoT platform for monitoring.
 ## Breakdown of Code Sections
-1. Libraries and WiFi Credentials
-cpp
-Copy
-Edit
+### 1. Libraries and WiFi Credentials
+``` c
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
-ESP8266WiFi.h: Handles WiFi connection.
-ArduinoJson.h: Parses JSON responses from OpenWeatherMap API.
-2. WiFi and API Credentials
-cpp
-Copy
-Edit
+```
+#### ESP8266WiFi.h: Handles WiFi connection.
+#### ArduinoJson.h: Parses JSON responses from OpenWeatherMap API.
+### 3. WiFi and API Credentials
+``` c
 const char* ssid = "Galaxy S23 E0D1";
 const char* password = "11223344";
 
@@ -32,41 +29,37 @@ const char* server = "api.openweathermap.org";
 
 const char* thingSpeakServer = "api.thingspeak.com";
 const String writeAPIKey = "KUAGHCLIPIV7SHG7";
-Stores WiFi credentials and API keys for OpenWeatherMap and ThingSpeak.
-3. Pin Definitions
-cpp
-Copy
-Edit
+```
+#### Stores WiFi credentials and API keys for OpenWeatherMap and ThingSpeak.
+### 3. Pin Definitions
+``` c
 #define sensorPower D7
 #define sensorPin D8
 #define greenLedPin D2
 #define redLedPin D3
-D7: Powers the soil moisture sensor.
-D8: Reads soil moisture (1 = dry, 0 = moist).
-D2/D3: Green and Red LEDs to indicate moisture level.
-4. WiFi Connection in setup()
-cpp
-Copy
-Edit
+```
+#### D7: Powers the soil moisture sensor.
+#### D8: Reads soil moisture (1 = dry, 0 = moist).
+#### D2/D3: Green and Red LEDs to indicate moisture level.
+### 4. WiFi Connection in setup()
+``` c
 WiFi.begin(ssid, password);
 while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.print(".");
 }
 Serial.println("\nConnecté au Wi-Fi !");
-The ESP8266 connects to WiFi and prints a status update.
-5. Main Logic in loop()
-cpp
-Copy
-Edit
+```
+#### The ESP8266 connects to WiFi and prints a status update.
+### 5. Main Logic in loop()
+``` c
 bool pluiePrevue = previsionPluie();
 int val = readSensor();
-Calls previsionPluie() to check if it will rain.
-Calls readSensor() to check soil moisture.
-Moisture and Rain Decision
-cpp
-Copy
-Edit
+```
+#### Calls previsionPluie() to check if it will rain.
+#### Calls readSensor() to check soil moisture.
+#### Moisture and Rain Decision
+``` c
 if (pluiePrevue) {
     Serial.println("Pluie prévue demain : Pas besoin d'arroser.");
     digitalWrite(greenLedPin, HIGH);
@@ -82,12 +75,11 @@ if (pluiePrevue) {
         digitalWrite(redLedPin, LOW);
     }
 }
-If rain is expected, no need to water; green LED is ON.
-If soil is dry, red LED turns ON to indicate irrigation is needed.
-6. Reading Soil Moisture
-cpp
-Copy
-Edit
+```
+##### If rain is expected, no need to water; green LED is ON.
+##### If soil is dry, red LED turns ON to indicate irrigation is needed.
+### 6. Reading Soil Moisture
+``` c
 int readSensor() {
     digitalWrite(sensorPower, HIGH);
     delay(10);
@@ -95,29 +87,26 @@ int readSensor() {
     digitalWrite(sensorPower, LOW);
     return val;
 }
-Activates the sensor, reads its output, then powers it off to save energy.
-7. Fetching Weather Forecast
-cpp
-Copy
-Edit
+```
+#### Activates the sensor, reads its output, then powers it off to save energy.
+### 7. Fetching Weather Forecast
+``` c
 bool previsionPluie() {
     if (client.connect(server, 80)) {
         String url = "/data/2.5/forecast?q=" + String(city) + "," + String(country) + "&appid=" + String(apiKey);
-Sends a GET request to OpenWeatherMap to fetch a 5-day forecast.
-Parses the JSON response to check for "rain" in the forecast.
-cpp
-Copy
-Edit
+``` 
+#### Sends a GET request to OpenWeatherMap to fetch a 5-day forecast.
+#### Parses the JSON response to check for "rain" in the forecast.
+``` c
 for (JsonObject forecast : doc["list"].as<JsonArray>()) {
     if (forecast.containsKey("rain")) {
         return true; 
     }
 }
-If rain is found, returns true; otherwise, false.
-8. Sending Data to ThingSpeak
-cpp
-Copy
-Edit
+```
+#### If rain is found, returns true; otherwise, false.
+### 8. Sending Data to ThingSpeak
+``` c
 void envoyerDonneesThingSpeak(int humidite, bool pluie) {
     if (client.connect(thingSpeakServer, 80)) {
         String data = "field1=" + String(humidite) + "&field2=" + String(pluie ? 1 : 0);
@@ -134,10 +123,11 @@ void envoyerDonneesThingSpeak(int humidite, bool pluie) {
         Serial.println("Échec de la connexion à ThingSpeak");
     }
 }
-Sends moisture and rain prediction data to ThingSpeak for monitoring.
-Summary of Functionality
-Connects to WiFi
-Fetches weather forecast (rain prediction)
-Reads soil moisture sensor
-Controls LEDs to indicate whether watering is needed
-Sends data to ThingSpeak for remote monitoring
+```
+#### Sends moisture and rain prediction data to ThingSpeak for monitoring.
+## Summary of Functionality
+1.Connects to WiFi
+2.Fetches weather forecast (rain prediction)
+3.Reads soil moisture sensor
+4.Controls LEDs to indicate whether watering is needed
+5.Sends data to ThingSpeak for remote monitoring
