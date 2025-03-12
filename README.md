@@ -45,38 +45,38 @@ const String writeAPIKey = "KUAGHCLIPIV7SHG7";
 #### D2/D3: Green and Red LEDs to indicate moisture level.
 ### 4. WiFi Connection in setup()
 ``` c
-WiFi.begin(ssid, password);
-while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-}
-Serial.println("\nConnecté au Wi-Fi !");
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(1000);
+      Serial.print(".");
+    }
+    Serial.println("\nConnected to Wi-Fi!");
 ```
 #### The ESP8266 connects to WiFi and prints a status update.
 ### 5. Main Logic in loop()
 ``` c
-bool pluiePrevue = previsionPluie();
-int val = readSensor();
+ bool rainExpected = checkRainForecast();
+ int val = readSensor()
 ```
 #### Calls previsionPluie() to check if it will rain.
 #### Calls readSensor() to check soil moisture.
 #### Moisture and Rain Decision
 ``` c
-if (pluiePrevue) {
-    Serial.println("Pluie prévue demain : Pas besoin d'arroser.");
-    digitalWrite(greenLedPin, HIGH);
-    digitalWrite(redLedPin, LOW);
-} else {
-    if (val) {
-        Serial.println("Sol trop sec : il est temps d'arroser !");
+ if (rainExpected) {
+      Serial.println("Rain expected tomorrow: No need to water.");
+      digitalWrite(greenLedPin, HIGH); // Indicate good status
+      digitalWrite(redLedPin, LOW);
+    } else {
+      if (val) {
+        Serial.println("Soil too dry: Time to water!");
         digitalWrite(greenLedPin, LOW);
         digitalWrite(redLedPin, HIGH);
-    } else {
-        Serial.println("Humidité du sol parfaite.");
+      } else {
+        Serial.println("Soil moisture is perfect.");
         digitalWrite(greenLedPin, HIGH);
         digitalWrite(redLedPin, LOW);
+      }
     }
-}
 ```
 ##### If rain is expected, no need to water; green LED is ON.
 ##### If soil is dry, red LED turns ON to indicate irrigation is needed.
@@ -93,9 +93,9 @@ int readSensor() {
 #### Activates the sensor, reads its output, then powers it off to save energy.
 ### 7. Fetching Weather Forecast
 ``` c
-bool previsionPluie() {
+bool checkRainForecast() {
     if (client.connect(server, 80)) {
-        String url = "/data/2.5/forecast?q=" + String(city) + "," + String(country) + "&appid=" + String(apiKey);
+      String url = "/data/2.5/forecast?q=" + String(city) + "," + String(country) + "&appid=" + String(apiKey);
 ``` 
 #### Sends a GET request to OpenWeatherMap to fetch a 5-day forecast.
 #### Parses the JSON response to check for "rain" in the forecast.
@@ -109,20 +109,20 @@ for (JsonObject forecast : doc["list"].as<JsonArray>()) {
 #### If rain is found, returns true; otherwise, false.
 ### 8. Sending Data to ThingSpeak
 ``` c
-void envoyerDonneesThingSpeak(int humidite, bool pluie) {
+void sendDataToThingSpeak(int moisture, bool rain) {
     if (client.connect(thingSpeakServer, 80)) {
-        String data = "field1=" + String(humidite) + "&field2=" + String(pluie ? 1 : 0);
-        client.print(String("POST /update HTTP/1.1\r\n") +
-                    "Host: " + thingSpeakServer + "\r\n" +
-                    "Connection: close\r\n" +
-                    "X-THINGSPEAKAPIKEY: " + writeAPIKey + "\r\n" +
-                    "Content-Type: application/x-www-form-urlencoded\r\n" +
-                    "Content-Length: " + data.length() + "\r\n\r\n" +
-                    data);
-        client.stop();
-        Serial.println("Données envoyées à ThingSpeak");
+      String data = "field1=" + String(moisture) + "&field2=" + String(rain ? 1 : 0);
+      client.print(String("POST /update HTTP/1.1\r\n") +
+                  "Host: " + thingSpeakServer + "\r\n" +
+                  "Connection: close\r\n" +
+                  "X-THINGSPEAKAPIKEY: " + writeAPIKey + "\r\n" +
+                  "Content-Type: application/x-www-form-urlencoded\r\n" +
+                  "Content-Length: " + data.length() + "\r\n\r\n" +
+                  data);
+      client.stop();
+      Serial.println("Data sent to ThingSpeak");
     } else {
-        Serial.println("Échec de la connexion à ThingSpeak");
+      Serial.println("Failed to connect to ThingSpeak");
     }
 }
 ```
