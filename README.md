@@ -2,6 +2,7 @@
 This Arduino program, designed for the ESP8266 WiFi module, reads soil moisture data and fetches weather forecasts from OpenWeatherMap. It then uses this data to decide whether irrigation is necessary and logs the information to ThingSpeak for remote monitoring.
 
 ## Key Features:
+<pre>
 1. Connects to WiFi using provided SSID and password.
 2.Fetches weather data from OpenWeatherMap API to check if rain is expected.
 3.Reads soil moisture using a digital sensor.
@@ -9,6 +10,7 @@ This Arduino program, designed for the ESP8266 WiFi module, reads soil moisture 
 .Green LED (D2): Soil moisture is good / Rain expected.
 .Red LED (D3): Soil is too dry, irrigation needed.
 5.Sends data to ThingSpeak, a cloud-based IoT platform for monitoring.
+</pre>
 ## Breakdown of Code Sections
 ### 1. Libraries and WiFi Credentials
 ``` c
